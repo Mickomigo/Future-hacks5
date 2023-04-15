@@ -1,4 +1,3 @@
-import tkinter as tk
 import os
 import cv2
 import pathlib
@@ -15,13 +14,11 @@ engine = pyttsx3.init()
 voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id)
 
-window = tk.Tk()
-window.title("Ruby")
-window.geometry("600x400")
 
 def talk(text):
     engine.say(text)
     engine.runAndWait()
+
 
 def take_command():
     r = sr.Recognizer()
@@ -39,6 +36,7 @@ def take_command():
         return ""
     return command
 
+
 def weather():
     api_address = 'https://api.openweathermap.org/data/2.5/weather?q=Kołobrzeg,au&appid=066ad67de135d6417049d234decff5f6'
     city = 'kołobrzeg'
@@ -48,6 +46,7 @@ def weather():
     weather_details = get_weather_data(json_data, city)
     print(weather_details)
     talk(weather_details)
+
 
 def run_ruby():
     command = take_command()
@@ -102,12 +101,8 @@ def run_ruby():
             talk(f'currently there is {temperature} celcius degrees.')
         except:
             talk('I was not able to download weather info.')
-
     else:
         talk('Please say the command again.')
 
 
-while True:
-    run_ruby()
-    
 
