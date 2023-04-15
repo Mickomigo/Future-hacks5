@@ -1,129 +1,113 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import tkinter as tk
+import os
+import cv2
+import pathlib
+import speech_recognition as sr
+import pyttsx3
+import pywhatkit
+import datetime
+import wikipedia
+import pyjokes
+import requests
 
-# C extensions
-*.so
+listener = sr.Recognizer()
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+window = tk.Tk()
+window.title("Ruby")
+window.geometry("600x400")
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+def talk(text):
+    engine.say(text)
+    engine.runAndWait()
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+def take_command():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        r.pause_threshold = 1
+        audio = r.listen(source)
+    try:
+        print("Recognizing...")
+        command = r.recognize_google(audio, language='en-in').lower()
+        print(f"You said: {command}")
+    except Exception as e:
+        print(e)
+        print("Sorry, I didn't catch that. Please try again.")
+        return ""
+    return command
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
+def weather():
+    api_address = 'https://api.openweathermap.org/data/2.5/weather?q=Kołobrzeg,au&appid=066ad67de135d6417049d234decff5f6'
+    city = 'kołobrzeg'
+    units_format = "&units=metrics"
+    final_url = api_address + units_format
+    json_data = requests.get(final_url).json()
+    weather_details = get_weather_data(json_data, city)
+    print(weather_details)
+    talk(weather_details)
 
-# Translations
-*.mo
-*.pot
+def run_ruby():
+    command = take_command()
+    print(command)
+    if 'play' in command:
+        song = command.replace('play', '')
+        talk('playing ' + song)
+        pywhatkit.playonyt(song)
+    elif 'time' in command:
+        time = datetime.datetime.now().strftime('%I:%M %p')
+        talk('Current time is ' + time)
+    elif 'who is' in command:
+        person = command.replace('who is', '')
+        info = wikipedia.summary(person, 1)
+        print(info)
+        talk(info)
+    elif 'joke' in command:
+        talk(pyjokes.get_joke())
+    elif 'can you see me' in command:
+        print('yes I can')
+        talk('yes i can')
+        cascade_path = pathlib.Path(cv2.__file__).parent.absolute() / "data/haarcascade_frontalface_default.xml"
+        clf = cv2.CascadeClassifier(str(cascade_path))
+        camera = cv2.VideoCapture(0)
+        while True:
+            _, frame = camera.read()
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = clf.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=4,
+                minSize=(30, 30),
+                flags=cv2.CASCADE_SCALE_IMAGE
+            )
+            for (x, y, width, height) in faces:
+                cv2.rectangle(frame, (x, y), (x+width, y+height), (255, 255, 0), 2)
+                cv2.imshow("faces", frame)
+                if cv2.waitKey(3) == ord("q"):
+                    break
+            break
+        camera.release()
+        cv2.destroyAllWindows
+    elif 'stop' in command:
+        return(0)
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+    elif 'weather' in command:
+        try:
+            url = 'https://api.openweathermap.org/data/2.5/weather?lat=54.18253&lon=15.56749&appid=066ad67de135d6417049d234decff5f6&units=metric'
+            response = requests.get(url)
+            data = response.json()
+            temperature = data['main']['temp']
+            talk(f'currently there is {temperature} celcius degrees.')
+        except:
+            talk('I was not able to download weather info.')
 
-# Flask stuff:
-instance/
-.webassets-cache
+    else:
+        talk('Please say the command again.')
 
-# Scrapy stuff:
-.scrapy
 
-# Sphinx documentation
-docs/_build/
+while True:
+    run_ruby()
+    
 
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
